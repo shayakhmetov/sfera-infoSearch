@@ -2,6 +2,9 @@ __author__ = 'rim'
 import argparse
 import random
 import re
+from sklearn.cluster import DBSCAN
+from itertools import groupby
+import numpy as np
 
 host_name = "http://kinopoisk.ru/"
 number_of_random_urls = 1000
@@ -97,25 +100,35 @@ def assign_features(features, urls):
 
     for i, url in enumerate(urls):
         urls_with_vectors[i]['vector'] = [0] * len(features)
-        for feature in features:
+        for f, feature in enumerate(features):
             if feature['type'] == '1':
                 if feature['value'] == len(url['segments']):
-                    urls_with_vectors[i]['vector'] = 1
+                    urls_with_vectors[i]['vector'][f] = 1
             elif feature['type'] == '2':
                 if feature['value'] == len(url['parameters']):
-                    urls_with_vectors[i]['vector'] = 1
+                    urls_with_vectors[i]['vector'][f] = 1
             elif feature['type'] == '3':
                 if len(url['parameters']) > feature['value']['i'] and feature['value']['parameter'] == url['parameters'][feature['value']['i']]:
-                    urls_with_vectors[i]['vector'] = 1
+                    urls_with_vectors[i]['vector'][f] = 1
             elif feature['type'] == '4':
                 if len(url['segments']) > feature['value']['i'] and feature['value']['segment'] == url['segments'][feature['value']['i']]:
-                    urls_with_vectors[i]['vector'] = 1
+                    urls_with_vectors[i]['vector'][f] = 1
 
     return urls_with_vectors
 
 
 def make_clusters(urls_with_vectors):
-    pass
+    model = DBSCAN(eps=1, min_samples=5)
+    labels = model.fit_predict(np.array([u['vector'] for u in urls_with_vectors]))
+    for i, l in enumerate(labels):
+        urls_with_vectors[i]['cluster'] = l
+
+    urls_with_vectors = sorted(urls_with_vectors, key=lambda u: u['cluster'])
+    clusters = []
+    for k, us in groupby(urls_with_vectors, key=lambda u: u['cluster']):
+        clusters.append(list(us))
+
+    return clusters
 
 
 def get_regular_expressions(clusters):
@@ -145,9 +158,14 @@ def main():
             print(f)
         print('...')
 
-        urls_with_vectors = assign_features(features, examined_urls + general_urls)
+        urls_with_vectors = assign_features(features, urls) #examined_urls + general_urls)
 
-        clusters = make_clusters(urls_with_vectors)
+        clusters = list(make_clusters(urls_with_vectors))
+
+        for i, c in enumerate(clusters):
+            print('#######', i+1, ' CLUSTER of', len(clusters), '#######')
+            for u in c:
+                print(try_to_regex(u['url']))
 
         result = get_regular_expressions(clusters)
 
