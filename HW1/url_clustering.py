@@ -151,7 +151,7 @@ def assign_features(features, urls):
 
 
 def make_clusters(urls_with_vectors):
-    model = DBSCAN(eps=0.1, min_samples=3, metric='jaccard')
+    model = DBSCAN(eps=0.1, min_samples=5, metric='jaccard')
     labels = model.fit_predict(np.array([u['vector'] for u in urls_with_vectors]))
     for i, l in enumerate(labels):
         urls_with_vectors[i]['cluster'] = l
@@ -190,29 +190,31 @@ def get_regex_cluster(cluster):
     if len(cluster) == 1:
         return construct_url(cluster[0])
     else:
-        l = min(cluster, key=lambda u: len(u['segments']))
+        l = min(cluster, key=lambda url: len(url['segments']))
         l = len(l['segments'])
-        m = max(cluster, key=lambda u: len(u['segments']))
+        m = max(cluster, key=lambda url: len(url['segments']))
         m = len(m['segments'])
         regex = host_name
         if l != 0:
             for i in range(l):
                 regex += (get_segment_regex([u['segments'][i] for u in cluster]) + '/')
-                regex = regex[:-1]
+            regex += '?'
         if m > l:
-            regex += '/'
+            if l != 0:
+                regex = regex[:-1]
             for i in range(l, m):
                 regex_segments = get_segment_regex([u['segments'][i] for u in cluster if len(u['segments']) > i])
                 if regex_segments[0] == '(':
                     regex += (regex_segments + '?/')
                 else:
                     regex += ('(' + regex_segments + ')?/')
-            regex = regex[:-1]
-        l = min(cluster, key=lambda u: len(u['parameters']))
+            regex += '?'
+        l = min(cluster, key=lambda url: len(url['parameters']))
         l = len(l['parameters'])
-        if l == 0:
-            regex += '/?'
-        else:
+        m = max(cluster, key=lambda url: len(url['parameters']))
+        m = len(m['parameters'])
+        if m != 0:
+            regex = regex[:-2]
             parameters = []
 
             for u in cluster:
@@ -220,12 +222,13 @@ def get_regex_cluster(cluster):
                     parameters.append(p)
 
             regex += ('?' + get_parameters_regex(parameters))
+        if m == l == 0 and regex[-2:] != '/?':
+            regex += '/?'
         return regex
+
 
 def get_regular_expressions(clusters):
     clusters_with_unique = []
-    others_cluster = []
-    others_cluster_strings = []
     for c in clusters:
         unique_cluster_strings = []
         unique_cluster = []
@@ -237,16 +240,10 @@ def get_regular_expressions(clusters):
             if url_string not in unique_cluster_strings:
                 unique_cluster_strings.append(url_string)
                 unique_cluster.append(u)
-        if qlink > 0:
-            clusters_with_unique.append({'url_strings': unique_cluster_strings, 'cluster': unique_cluster,
-                                         'quality': qlink/len(c), 'regex': get_regex_cluster(unique_cluster)})
-            for u in unique_cluster:
-                others_cluster_strings.append(construct_url(u))
-                others_cluster.append(u)
+        clusters_with_unique.append({'url_strings': unique_cluster_strings, 'cluster': unique_cluster,
+                                     'quality': qlink/len(c), 'regex': get_regex_cluster(unique_cluster)})
 
-    clusters_with_unique.append({'url_strings': others_cluster_strings, 'cluster': others_cluster,
-                                 'quality': 0, 'regex': get_regex_cluster(others_cluster)})
-    return sorted(clusters_with_unique, key=lambda c: -c['quality'])
+    return sorted(clusters_with_unique, key=lambda cluster: -cluster['quality'])
 
 
 def main():
