@@ -7,13 +7,14 @@ from itertools import groupby
 import numpy as np
 
 host_name = "http://kinopoisk.ru/"
-number_of_random_urls = 1000
-
+number_of_random_urls = 4000
+selected_alpha = 0.04
 
 def parse_args():
     parser = argparse.ArgumentParser(description='parse two file names')
     parser.add_argument(dest='general_filename', help='general urls')
     parser.add_argument(dest='examined_filename', help='examined urls')
+    parser.add_argument('-o', dest='regex_filename', help='filename for output regexs', default='regexs')
     return parser.parse_args()
 
 
@@ -28,9 +29,8 @@ def get_extension(s):
 
 def try_to_regex(s):
     s = re.escape(s)
-    s = re.sub(r'[^/]+\.flv', '[^/]\.flv', s)
+    s = re.sub(r'[^/]+\.flv', '[^/]+\.flv', s)
     s = re.sub(r'[^/]*%[^/]*', '[^/]*%[^/]*', s)
-    # s = re.sub(r'^[0-9]$', '[0-9]$', s)
     s = re.sub(r'[0-9]{4}\-[0-9]{2}\-[0-9]{2}', '[0-9]{4}-[0-9]{2}-[0-9]{2}', s)
     s = re.sub(r'[0-9]+', '[0-9]+', s)
     return s
@@ -45,15 +45,12 @@ def divide_and_normalize(urls, qlink=False):
         if every_url[len(host_name)] == '?':
             url_as_dictionary['segments'] = []
         else:
-            if url[0][-1] != '/':
-                url[0] += '/'
-            url_as_dictionary['segments'] = [try_to_regex(s) for s in url[0].split('/')[:-1]]
+            url_as_dictionary['segments'] = [try_to_regex(s) for s in url[0].rstrip('/').split('/')]
 
         if len(url) == 1:
             url_as_dictionary['parameters'] = []
         else:
-            url_as_dictionary['parameters'] = [try_to_regex(p) for p in url[1].split('&')]
-
+            url_as_dictionary['parameters'] = [try_to_regex(p) for p in url[-1].split('&')]
         yield url_as_dictionary
 
 
@@ -116,7 +113,7 @@ def count_freq_features(features, urls):
     return features
 
 
-def select_features(features, urls, alpha=0.05):
+def select_features(features, urls, alpha=selected_alpha):
     features = list(count_freq_features(features, urls))
     features = sorted(features, key=lambda f: -f['freq'])
     n = int(number_of_random_urls*alpha)
@@ -151,7 +148,7 @@ def assign_features(features, urls):
 
 
 def make_clusters(urls_with_vectors):
-    model = DBSCAN(eps=0.1, min_samples=5, metric='jaccard')
+    model = DBSCAN(eps=0.25, min_samples=10, metric='jaccard')
     labels = model.fit_predict(np.array([u['vector'] for u in urls_with_vectors]))
     for i, l in enumerate(labels):
         urls_with_vectors[i]['cluster'] = l
@@ -169,10 +166,22 @@ def get_segment_regex(segments):
     for s in segments:
         if s not in uniq_segments:
             uniq_segments.append(s)
+
+    find = False
+    for u in uniq_segments:
+        if re.search(r'%', u):
+            find = True
+            break
+    if find:
+        return '[^/]+'
+
     if len(uniq_segments) == 1:
         return uniq_segments[0]
     else:
-        return '(' + '|'.join(uniq_segments) + ')'
+        if len(uniq_segments) > 8:
+            return '[^/]+'
+        else:
+            return '(' + '|'.join(uniq_segments) + ')'
 
 
 def get_parameters_regex(parameters):
@@ -180,10 +189,26 @@ def get_parameters_regex(parameters):
     for p in parameters:
         if p not in uniq_parameters:
             uniq_parameters.append(p)
-    if len(uniq_parameters) == 1:
+
+    find = False
+    for u in uniq_parameters:
+        if re.search(r'%', u):
+            find = True
+            break
+    if find:
+        return '.+'
+    elif len(uniq_parameters) == 1:
         return uniq_parameters[0]
     else:
-        return '(' + '|'.join(uniq_parameters) + ')'+'{' + '0,' + str(len(uniq_parameters)) + '}'
+        if len(uniq_parameters) >= 3:
+            return '.+'
+        else:
+            return '(' + '|'.join(uniq_parameters) + ')'+'{' + '0,' + str(len(uniq_parameters)) + '}'
+
+
+def shorten_regex(regex):
+    pattern = re.compile('(\(\[\^/\]\+\)\?/\?)+')
+    return pattern.sub('.+', regex)
 
 
 def get_regex_cluster(cluster):
@@ -203,12 +228,15 @@ def get_regex_cluster(cluster):
             if l != 0:
                 regex = regex[:-1]
             for i in range(l, m):
-                regex_segments = get_segment_regex([u['segments'][i] for u in cluster if len(u['segments']) > i])
-                if regex_segments[0] == '(':
-                    regex += (regex_segments + '?/')
+                if i > 10:
+                    regex += '.+'
+                    break
                 else:
-                    regex += ('(' + regex_segments + ')?/')
-            regex += '?'
+                    regex_segments = get_segment_regex([u['segments'][i] for u in cluster if len(u['segments']) > i])
+                    if regex_segments[0] == '(':
+                        regex += (regex_segments + '?/?')
+                    else:
+                        regex += ('(' + regex_segments + ')?/?')
         l = min(cluster, key=lambda url: len(url['parameters']))
         l = len(l['parameters'])
         m = max(cluster, key=lambda url: len(url['parameters']))
@@ -221,10 +249,10 @@ def get_regex_cluster(cluster):
                 for p in u['parameters']:
                     parameters.append(p)
 
-            regex += ('?' + get_parameters_regex(parameters))
-        if m == l == 0 and regex[-2:] != '/?':
+            regex += ('\?' + get_parameters_regex(parameters))
+        if regex[-2:] != '/?':
             regex += '/?'
-        return regex
+        return shorten_regex(regex)
 
 
 def get_regular_expressions(clusters):
@@ -264,7 +292,7 @@ def main():
                 generated_features.append(f)
         print(len(generated_features), 'features generated.')
 
-        features = select_features(generated_features, urls, alpha=0.15)
+        features = select_features(generated_features, urls)
         # for f in features:
         #     print(f)
         # print('...\n')
@@ -272,18 +300,25 @@ def main():
         print('Assigning features to all urls...')
         # urls_with_vectors = assign_features(features, urls)
         urls_with_vectors = assign_features(features, examined_urls + general_urls)
+
         print('Clustering...')
         clusters = list(make_clusters(urls_with_vectors))
+
         print('Getting regex for every cluster...')
         result_clusters = get_regular_expressions(clusters)
 
-        with open('regexs', 'w') as file_regexs:
+        print('Printing results...')
+        with open(args.regex_filename, 'w') as file_regexs:
+            regs_to_write = []
             for i, c in enumerate(result_clusters):
                 print('\n#######', i+1, ' CLUSTER of', len(result_clusters), '#######')
                 print('QUALITY =', c['quality'], 'REGEX =', c['regex'], end='\n\n')
-                file_regexs.write(c['regex'] + '\n')
+                regs_to_write.append(c['regex'])
                 for url_string in c['url_strings']:
                     print(url_string)
+            regs_to_write = sorted(regs_to_write)
+            for reg in regs_to_write:
+                file_regexs.write(reg + '\n')
 
 
 if __name__ == '__main__':
