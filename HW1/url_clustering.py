@@ -9,8 +9,8 @@ import numpy as np
 host_name = "http://kinopoisk.ru/"
 number_of_random_urls = 4000
 selected_alpha = 0.04
-dbscan_eps = 0.15
-dbscan_min_samples = 10
+dbscan_eps = 0.3
+dbscan_min_samples = 1
 
 def parse_args():
     parser = argparse.ArgumentParser(description='parse two file names')
@@ -60,8 +60,8 @@ def construct_url(u):
     url_string = host_name
     for segment in u['segments']:
         url_string += (segment + '/')
-    if u['parameters'] is not []:
-        url_string = url_string[:-1] + '?'
+    if u['parameters']:
+        url_string = url_string[:-1] + '\\?'
         for parameter in u['parameters']:
             url_string += (parameter + '&')
         url_string = url_string[:-1]
@@ -163,7 +163,7 @@ def make_clusters(urls_with_vectors):
     return clusters
 
 
-def get_segment_regex(segments):
+def get_segment_regex(segments, max_segments=10):
     uniq_segments = []
     for s in segments:
         if s not in uniq_segments:
@@ -175,13 +175,13 @@ def get_segment_regex(segments):
             find = True
             break
     if find:
-        return '[^/]+'
+        return '[^/?]+'
 
     if len(uniq_segments) == 1:
         return uniq_segments[0]
     else:
-        if len(uniq_segments) > 8:
-            return '[^/]+'
+        if len(uniq_segments) > max_segments:
+            return '[^/?]+'
         else:
             return '(' + '|'.join(uniq_segments) + ')'
 
@@ -198,35 +198,35 @@ def get_parameters_regex(parameters):
             find = True
             break
     if find:
-        return '.+'
+        return '[^&]+'
     elif len(uniq_parameters) == 1:
         return uniq_parameters[0]
     else:
-        if len(uniq_parameters) >= 3:
-            return '.+'
+        if len(uniq_parameters) > 3:
+            return '[^&]+'
         else:
             return '(' + '|'.join(uniq_parameters) + ')'+'{' + '0,' + str(len(uniq_parameters)) + '}'
 
 
 def shorten_regex(regex):
-    pattern = re.compile('(\(\[\^/\]\+\)\?/\?)+')
-    return pattern.sub('.+', regex)
+    pattern = re.compile('(\(\[\^/\?\]\+\)\?/\?)+')
+    return pattern.sub('[^?]+', regex)
 
 
 def get_regex_cluster(cluster):
-    max_segments = 7
+    max_segments = 10
     if len(cluster) == 1:
-        regex = ''
-        if len(cluster[0]['segments']) >= max_segments:
-            cluster[0]['segments'] = cluster[0]['segments'][:max_segments]
-            regex = construct_url(cluster[0]) + '.+'
+        segments = cluster[0]['segments']
+        if len(segments) >= max_segments:
+            cluster[0]['segments'] = segments[:max_segments]
+            regex = construct_url(cluster[0]) + '[^?]+'
         else:
             regex = construct_url(cluster[0])
-            if cluster[0]['parameters'] == 0 and regex[-1] != '/':
-                regex += '/?'
-            elif regex[-1] == '/':
-                regex += '?'
-        return regex + '$'
+        if cluster[0]['parameters'] == 0 and regex[-1] != '/':
+            regex += '/?'
+        elif regex[-1] == '/':
+            regex += '?'
+        return shorten_regex(regex) + '$'
     else:
         # min_segments = zip(*[u['segments'] for u in cluster])
         # min_segments = [list(segments) for segments in min_segments]
@@ -238,17 +238,17 @@ def get_regex_cluster(cluster):
         regex = host_name
         if l != 0:
             for i in range(l):
-                regex += (get_segment_regex([u['segments'][i] for u in cluster]) + '/')
+                regex += (get_segment_regex([u['segments'][i] for u in cluster], max_segments=max_segments) + '/')
             regex += '?'
         if m > l:
             if l != 0:
                 regex = regex[:-1]
             for i in range(l, m):
                 if l + i >= max_segments:
-                    regex += '.+'
+                    regex += '[^?]+'
                     break
                 else:
-                    regex_segments = get_segment_regex([u['segments'][i] for u in cluster if len(u['segments']) > i])
+                    regex_segments = get_segment_regex([u['segments'][i] for u in cluster if len(u['segments']) > i], max_segments=max_segments)
                     if regex_segments[0] == '(':
                         regex += (regex_segments + '?/?')
                     else:
@@ -266,7 +266,7 @@ def get_regex_cluster(cluster):
                     parameters.append(p)
 
             regex += ('\\?' + get_parameters_regex(parameters))
-        elif m == 0 and regex[-2:] != '/?':
+        if m == 0 and regex[-1] != '?' and regex[-2] != '/':
             regex += '/?'
         return shorten_regex(regex) + '$'
 
