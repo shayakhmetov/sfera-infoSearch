@@ -22,19 +22,16 @@ def purity(regexs, examined_urls, general_urls):
     general_counts = [0] * len(regexs)
     for j, u in enumerate(examined_urls):
         for i, r in enumerate(regexs):
-            #print(50*(i+1)*(j+1)/(2*(len(examined_urls)+1)*(len(regexs)+1)), '% of local purity completed...')
             if re.match(r, u):
                 examined_counts[i] += 1
                 n += 1
     for u in general_urls:
         for i, r in enumerate(regexs):
-            #print(50*(i+1)*(j+1)/((len(examined_urls)+1)*(len(regexs)+1)) + 50, '% of local purity completed...')
             if re.match(r, u):
                 general_counts[i] += 1
                 n += 1
 
     p += sum([max([a, b]) for (a, b) in zip(examined_counts, general_counts)]) / n
-    print('local purity =', p)
     return p
 
 
@@ -48,7 +45,7 @@ def main():
         general_urls = general_filename.read().rstrip('\n').split('\n')
 
         purity_final = 0.
-        m = 5
+        m = 10
         for i in range(m):
             print('BOOTSTRAPPING.', int(i/m*100), '% completed...\n')
             purity_final += purity(regexs, random.sample(examined_urls, number_of_random_urls // 2), random.sample(general_urls, number_of_random_urls // 2))

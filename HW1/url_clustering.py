@@ -8,7 +8,7 @@ import numpy as np
 
 host_name = "http://kinopoisk.ru/"
 number_of_random_urls = 4000
-selected_alpha = 0.04
+selected_alpha = 0.03
 
 def parse_args():
     parser = argparse.ArgumentParser(description='parse two file names')
