@@ -46,7 +46,7 @@ def main():
         general_urls = general_filename.read().rstrip('\n').split('\n')
 
         purity_final = 0.
-        m = 10
+        m = 50
         regexs_counts = [0] * len(regexs)
         for i in range(m):
             print('BOOTSTRAPPING.', int(i/m*100), '% completed...\n')

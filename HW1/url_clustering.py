@@ -9,8 +9,8 @@ import numpy as np
 host_name = "http://kinopoisk.ru/"
 number_of_random_urls = 4000
 selected_alpha = 0.04
-dbscan_eps = 0.2
-dbscan_min_samples = 3
+dbscan_eps = 0.15
+dbscan_min_samples = 10
 
 def parse_args():
     parser = argparse.ArgumentParser(description='parse two file names')
@@ -214,12 +214,18 @@ def shorten_regex(regex):
 
 
 def get_regex_cluster(cluster):
+    max_segments = 7
     if len(cluster) == 1:
-        regex = construct_url(cluster[0])
-        if cluster[0]['parameters'] == 0 and regex[-1] != '/':
-            regex += '/?'
-        elif regex[-1] == '/':
-            regex += '?'
+        regex = ''
+        if len(cluster[0]['segments']) >= max_segments:
+            cluster[0]['segments'] = cluster[0]['segments'][:max_segments]
+            regex = construct_url(cluster[0]) + '.+'
+        else:
+            regex = construct_url(cluster[0])
+            if cluster[0]['parameters'] == 0 and regex[-1] != '/':
+                regex += '/?'
+            elif regex[-1] == '/':
+                regex += '?'
         return regex + '$'
     else:
         # min_segments = zip(*[u['segments'] for u in cluster])
@@ -238,7 +244,7 @@ def get_regex_cluster(cluster):
             if l != 0:
                 regex = regex[:-1]
             for i in range(l, m):
-                if i > 10:
+                if l + i >= max_segments:
                     regex += '.+'
                     break
                 else:
