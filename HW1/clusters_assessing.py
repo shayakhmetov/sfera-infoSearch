@@ -4,7 +4,7 @@ import random
 import re
 
 host_name = "http://kinopoisk.ru/"
-number_of_random_urls = 1000
+number_of_random_urls = 2000
 
 
 def parse_args():
@@ -30,9 +30,10 @@ def purity(regexs, examined_urls, general_urls):
             if re.match(r, u):
                 general_counts[i] += 1
                 n += 1
-
-    p += sum([max([a, b]) for (a, b) in zip(examined_counts, general_counts)]) / n
-    return p
+    result_counts = list(zip(examined_counts, general_counts))
+    p += sum([max([a, b]) for (a, b) in result_counts]) / n
+    result_counts = [a + b for (a, b) in result_counts]
+    return p, result_counts
 
 
 def main():
@@ -46,13 +47,22 @@ def main():
 
         purity_final = 0.
         m = 10
+        regexs_counts = [0] * len(regexs)
         for i in range(m):
             print('BOOTSTRAPPING.', int(i/m*100), '% completed...\n')
-            purity_final += purity(regexs, random.sample(examined_urls, number_of_random_urls // 2), random.sample(general_urls, number_of_random_urls // 2))
+            p, counts = purity(regexs, random.sample(examined_urls, number_of_random_urls // 2), random.sample(general_urls, number_of_random_urls // 2))
+            purity_final += p
+            regexs_counts = [a + b for (a, b) in zip(regexs_counts, counts)]
         print('100 % completed!\n')
         purity_final /= m
-
-        print('Purity is', purity_final)
+        n = sum(regexs_counts)
+        print('Total matches =', n, end='\n\n')
+        regexs_counts = [100*count / n for count in regexs_counts]
+        regexs = [(a, b) for (a, b) in zip(regexs_counts, regexs)]
+        regexs = sorted(regexs, key=lambda r: -r[0])
+        for r in regexs:
+            print(r[0], '% for ', r[1])
+        print('\nPurity is', purity_final)
 
 if __name__ == '__main__':
     main()

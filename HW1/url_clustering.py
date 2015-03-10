@@ -8,7 +8,9 @@ import numpy as np
 
 host_name = "http://kinopoisk.ru/"
 number_of_random_urls = 4000
-selected_alpha = 0.03
+selected_alpha = 0.04
+dbscan_eps = 0.2
+dbscan_min_samples = 3
 
 def parse_args():
     parser = argparse.ArgumentParser(description='parse two file names')
@@ -29,7 +31,7 @@ def get_extension(s):
 
 def try_to_regex(s):
     s = re.escape(s)
-    s = re.sub(r'[^/]+\.flv', '[^/]+\.flv', s)
+    s = re.sub(r'[^/]+\.flv', '[^/]+\\.flv', s)
     s = re.sub(r'[^/]*%[^/]*', '[^/]*%[^/]*', s)
     s = re.sub(r'[0-9]{4}\-[0-9]{2}\-[0-9]{2}', '[0-9]{4}-[0-9]{2}-[0-9]{2}', s)
     s = re.sub(r'[0-9]+', '[0-9]+', s)
@@ -148,7 +150,7 @@ def assign_features(features, urls):
 
 
 def make_clusters(urls_with_vectors):
-    model = DBSCAN(eps=0.25, min_samples=10, metric='jaccard')
+    model = DBSCAN(eps=dbscan_eps, min_samples=dbscan_min_samples, metric='jaccard')
     labels = model.fit_predict(np.array([u['vector'] for u in urls_with_vectors]))
     for i, l in enumerate(labels):
         urls_with_vectors[i]['cluster'] = l
@@ -213,8 +215,16 @@ def shorten_regex(regex):
 
 def get_regex_cluster(cluster):
     if len(cluster) == 1:
-        return construct_url(cluster[0])
+        regex = construct_url(cluster[0])
+        if cluster[0]['parameters'] == 0 and regex[-1] != '/':
+            regex += '/?'
+        elif regex[-1] == '/':
+            regex += '?'
+        return regex + '$'
     else:
+        # min_segments = zip(*[u['segments'] for u in cluster])
+        # min_segments = [list(segments) for segments in min_segments]
+
         l = min(cluster, key=lambda url: len(url['segments']))
         l = len(l['segments'])
         m = max(cluster, key=lambda url: len(url['segments']))
@@ -249,10 +259,10 @@ def get_regex_cluster(cluster):
                 for p in u['parameters']:
                     parameters.append(p)
 
-            regex += ('\?' + get_parameters_regex(parameters))
-        if regex[-2:] != '/?':
+            regex += ('\\?' + get_parameters_regex(parameters))
+        elif m == 0 and regex[-2:] != '/?':
             regex += '/?'
-        return shorten_regex(regex)
+        return shorten_regex(regex) + '$'
 
 
 def get_regular_expressions(clusters):
@@ -298,8 +308,8 @@ def main():
         # print('...\n')
 
         print('Assigning features to all urls...')
-        # urls_with_vectors = assign_features(features, urls)
-        urls_with_vectors = assign_features(features, examined_urls + general_urls)
+        urls_with_vectors = assign_features(features, urls)
+        # urls_with_vectors = assign_features(features, examined_urls + general_urls)
 
         print('Clustering...')
         clusters = list(make_clusters(urls_with_vectors))
