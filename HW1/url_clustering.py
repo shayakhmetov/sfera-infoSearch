@@ -9,7 +9,7 @@ import numpy as np
 host_name = "http://kinopoisk.ru/"
 number_of_random_urls = 4000
 selected_alpha = 0.04
-dbscan_eps = 0.3
+dbscan_eps = 0.31
 dbscan_min_samples = 1
 
 def parse_args():
@@ -198,12 +198,12 @@ def get_parameters_regex(parameters):
             find = True
             break
     if find:
-        return '[^&]+'
+        return '.+'
     elif len(uniq_parameters) == 1:
         return uniq_parameters[0]
     else:
         if len(uniq_parameters) > 3:
-            return '[^&]+'
+            return '.+'
         else:
             return '(' + '|'.join(uniq_parameters) + ')'+'{' + '0,' + str(len(uniq_parameters)) + '}'
 
@@ -214,6 +214,7 @@ def shorten_regex(regex):
 
 
 def get_regex_cluster(cluster):
+    max_length_segments = 7
     max_segments = 10
     if len(cluster) == 1:
         segments = cluster[0]['segments']
@@ -241,18 +242,15 @@ def get_regex_cluster(cluster):
                 regex += (get_segment_regex([u['segments'][i] for u in cluster], max_segments=max_segments) + '/')
             regex += '?'
         if m > l:
-            if l != 0:
-                regex = regex[:-1]
-            for i in range(l, m):
-                if l + i >= max_segments:
+            if m > max_length_segments:
                     regex += '[^?]+'
-                    break
+            for i in range(l, m):
+                regex_segments = get_segment_regex([u['segments'][i] for u in cluster if len(u['segments']) > i], max_segments=max_segments)
+                if regex_segments[0] == '(':
+                    regex += (regex_segments + '?')
                 else:
-                    regex_segments = get_segment_regex([u['segments'][i] for u in cluster if len(u['segments']) > i], max_segments=max_segments)
-                    if regex_segments[0] == '(':
-                        regex += (regex_segments + '?/?')
-                    else:
-                        regex += ('(' + regex_segments + ')?/?')
+                    regex += ('(' + regex_segments + ')?')
+            regex += '/?'
         l = min(cluster, key=lambda url: len(url['parameters']))
         l = len(l['parameters'])
         m = max(cluster, key=lambda url: len(url['parameters']))
