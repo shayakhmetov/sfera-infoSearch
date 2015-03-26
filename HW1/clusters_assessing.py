@@ -46,10 +46,10 @@ def main():
         general_urls = general_filename.read().rstrip('\n').split('\n')
 
         purity_final = 0.
-        m = 50
+        m = 10
         regexs_counts = [0] * len(regexs)
         for i in range(m):
-            print('BOOTSTRAPPING.', int(i/m*100), '% completed...\n')
+            print('BOOTSTRAPPING.', int((100.0*i)/m), '% completed...\n')
             p, counts = purity(regexs, random.sample(examined_urls, number_of_random_urls // 2), random.sample(general_urls, number_of_random_urls // 2))
             purity_final += p
             regexs_counts = [a + b for (a, b) in zip(regexs_counts, counts)]

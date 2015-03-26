@@ -7,7 +7,7 @@ from sklearn.cluster import DBSCAN
 from itertools import groupby
 import numpy as np
 
-host_name = "http://kinopoisk.ru/"
+host_name = None
 number_of_random_urls = 4000
 selected_alpha = 0.04
 dbscan_eps = 0.31
@@ -42,6 +42,9 @@ def try_to_regex(s):
 def divide_and_normalize(urls, qlink=False):
     for every_url in urls:
         url_as_dictionary = {'qlink': qlink, 'url': every_url}
+        global host_name
+        if host_name is None:
+            host_name = re.match("https?://[^/]+/*", every_url).group()
 
         url = every_url[len(host_name):].split('?')
 

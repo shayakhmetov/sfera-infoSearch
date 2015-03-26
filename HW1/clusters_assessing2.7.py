@@ -18,7 +18,7 @@ def parse_args():
 
 def purity(regexs, examined_urls, general_urls):
     p = 0.
-    n = 0
+    n = 0.
     examined_counts = [0] * len(regexs)
     general_counts = [0] * len(regexs)
     for j, u in enumerate(examined_urls):
@@ -50,15 +50,15 @@ def main():
         m = 50
         regexs_counts = [0] * len(regexs)
         for i in range(m):
-            print('BOOTSTRAPPING.', int(i/m*100), '% completed...\n')
-            p, counts = purity(regexs, random.sample(examined_urls, number_of_random_urls // 2), random.sample(general_urls, number_of_random_urls // 2))
+            print('BOOTSTRAPPING.', int(100.0*i/m), '% completed...\n')
+            p, counts = purity(regexs, random.sample(examined_urls, number_of_random_urls / 2), random.sample(general_urls, number_of_random_urls / 2))
             purity_final += p
             regexs_counts = [a + b for (a, b) in zip(regexs_counts, counts)]
         print('100 % completed!\n')
-        purity_final /= m
+        purity_final /= 1.0 * m
         n = sum(regexs_counts)
         print('Total matches =', n, end='\n\n')
-        regexs_counts = [100*count / n for count in regexs_counts]
+        regexs_counts = [100.0*count / n for count in regexs_counts]
         regexs = [(a, b) for (a, b) in zip(regexs_counts, regexs)]
         regexs = sorted(regexs, key=lambda r: -r[0])
         for r in regexs:
