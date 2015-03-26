@@ -9,9 +9,9 @@ import numpy as np
 
 host_name = None
 number_of_random_urls = 4000
-selected_alpha = 0.04
-dbscan_eps = 0.31
-dbscan_min_samples = 1
+selected_alpha = 0.04 #0.04
+dbscan_eps = 0.31 #0.31
+dbscan_min_samples = 1 #1
 
 def parse_args():
     parser = argparse.ArgumentParser(description='parse two file names')
@@ -45,10 +45,9 @@ def divide_and_normalize(urls, qlink=False):
         global host_name
         if host_name is None:
             host_name = re.match("https?://[^/]+/*", every_url).group()
-
         url = every_url[len(host_name):].split('?')
 
-        if every_url[len(host_name)] == '?':
+        if len(every_url) <= len(host_name) or every_url[len(host_name)] == '?':
             url_as_dictionary['segments'] = []
         else:
             url_as_dictionary['segments'] = [try_to_regex(s) for s in url[0].rstrip('/').split('/')]
@@ -61,7 +60,7 @@ def divide_and_normalize(urls, qlink=False):
 
 
 def construct_url(u):
-    url_string = host_name
+    url_string = re.escape(host_name)
     for segment in u['segments']:
         url_string += (segment + '/')
     if u['parameters']:
@@ -240,7 +239,7 @@ def get_regex_cluster(cluster):
         l = len(l['segments'])
         m = max(cluster, key=lambda url: len(url['segments']))
         m = len(m['segments'])
-        regex = host_name
+        regex = re.escape(host_name)
         if l != 0:
             for i in range(l):
                 regex += (get_segment_regex([u['segments'][i] for u in cluster], max_segments=max_segments) + '/')
@@ -337,6 +336,7 @@ def main():
             regs_to_write = sorted(regs_to_write)
             for reg in regs_to_write:
                 file_regexs.write(reg + '\n')
+            file_regexs.write(re.escape(host_name) + '*' + '\n')
 
 
 if __name__ == '__main__':

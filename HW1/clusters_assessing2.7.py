@@ -4,7 +4,6 @@ import argparse
 import random
 import re
 
-host_name = "http://kinopoisk.ru/"
 number_of_random_urls = 2000
 
 
