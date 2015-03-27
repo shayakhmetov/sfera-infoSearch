@@ -333,10 +333,8 @@ def main():
                 regs_to_write.append(c['regex'])
                 for url_string in c['url_strings']:
                     print(url_string)
-            regs_to_write = sorted(regs_to_write)
             for reg in regs_to_write:
                 file_regexs.write(reg + '\n')
-            file_regexs.write(re.escape(host_name) + '*' + '\n')
 
 
 if __name__ == '__main__':
