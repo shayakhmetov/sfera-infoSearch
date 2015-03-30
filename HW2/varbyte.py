@@ -1,12 +1,11 @@
+from __future__ import print_function
 __author__ = 'rim'
 import codecs
 
 
 def encode(int_array):
     for number in int_array:
-        n_bytes = 1
-        while number >= 2**(n_bytes*7):
-            n_bytes += 1
+        n_bytes = int((len('{0:0b}'.format(number))-1)/7) + 1
         byte_string = ('{0:0' + str(n_bytes*7) + 'b}').format(number)
         index = 0
         for i in range(n_bytes):
@@ -16,13 +15,13 @@ def encode(int_array):
                 byte = '0'
             byte += byte_string[index:index+7]
             index += 7
-            yield chr(int(byte, base=2))
+            yield int(byte, base=2)
 
 
 def decode(bytes):
     current_bytestring = ''
     for byte in bytes:
-        decoded_byte = '{0:08b}'.format(ord(byte))
+        decoded_byte = '{0:08b}'.format(byte)
         if decoded_byte[0] == '1':
             current_bytestring += decoded_byte[1:]
             yield int(current_bytestring, base=2)
@@ -37,6 +36,9 @@ def read_raw_data(filename):
         for line in file:
             nums = [int(x) for x in line.rstrip().split()]
             for num in nums:
+                if cur_num > num:
+                    print('FILE IS NOT SORTED! FAIL')
+                    exit(1)
                 yield num - cur_num
                 cur_num = num
 
@@ -45,14 +47,14 @@ def read_encoded_data(filename):
     with open(filename, 'rb') as file:
         byte = file.read(1)
         while byte:
-            yield byte
+            yield ord(byte)
             byte = file.read(1)
 
 
 def encode_file(write_filename, read_filename):
     with open(write_filename, 'wb') as blob_file:
         for byte in encode(read_raw_data(read_filename)):
-            blob_file.write(bytearray([ord(byte)]))
+            blob_file.write(bytearray([byte]))
 
 
 def decode_file(read_filename, write_filename):

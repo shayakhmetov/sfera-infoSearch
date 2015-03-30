@@ -39,7 +39,6 @@ def get_code(length):
 
 
 def give_nums(current_nums, max_length, string_code):
-    # print(get_pair_by_code(string_code))
     if string_code == '0000':
         byte_string = current_nums[0]
         assert len(byte_string) > 28
@@ -100,19 +99,11 @@ def encode(int_array):
             new_max_length = get_length(number=new_max_n)
 
         if not finish and (number_of_current+1)*new_max_length <= new_max_n*new_max_length:
-            # print('1:\t', number_of_current, '|', current_nums, byte_string, looking_nums)
-            # print('1a:\tcurrent:', cur_max_length, cur_max_n)
-            # print('1b:\tnew:', new_max_length, new_max_n)
-
             number_of_current += 1
             current_nums.append(byte_string)
             cur_max_length, cur_max_n = new_max_length, new_max_n
 
         elif number_of_current == cur_max_n or number_of_current == 1:
-            # print('2:\t', number_of_current, '|', current_nums, byte_string, looking_nums)
-            # print('2a:\tcurrent:', cur_max_length, cur_max_n)
-            # print('2b:\tnew:', new_max_length, new_max_n)
-
             if number_of_current == 1:
                 if len(current_nums[0]) > 28:
                     cur_max_length = len(current_nums[0])
@@ -132,11 +123,7 @@ def encode(int_array):
             cur_max_length, number_of_current = len(byte_string), 1
             cur_max_n = get_number(cur_max_length)
 
-
         else:
-            # print('3:\t', number_of_current, '|', current_nums, byte_string, looking_nums)
-            # print('3a:\tcurrent:', cur_max_length, cur_max_n)
-            # print('3b:\tnew:', new_max_length, new_max_n)
             cur_max_length = get_length(to_next=cur_max_length)
             cur_max_n = get_number(cur_max_length)
             assert cur_max_n <= number_of_current
@@ -150,7 +137,6 @@ def encode(int_array):
             for num in give_nums(current_nums, cur_max_length, string_code):
                 yield int(num, base=2)
             current_nums, cur_max_length, cur_max_n, number_of_current = [], 0, 0, 0
-        # print()
 
 
 def get_pair_by_code(code):
@@ -169,7 +155,6 @@ def decode(bytes):
         decoded_byte = '{0:08b}'.format(byte)
         if not string_code:
             string_code = decoded_byte[:4]
-            # print(get_pair_by_code(string_code))
 
         if string_code == '0000':
             if n_bytes == 0:
@@ -239,8 +224,6 @@ def decode_file(read_filename, write_filename):
 
 
 def main():
-    # encode_file(write_filename='mini_blob', read_filename='mini_nums')
-    # decode_file(read_filename='mini_blob', write_filename='result')
     encode_file(write_filename='blob', read_filename='nums')
     decode_file(read_filename='blob', write_filename='result')
 
