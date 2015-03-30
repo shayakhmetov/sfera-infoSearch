@@ -22,7 +22,7 @@ def main():
         text = ' '.join(etree.XPath("//text()")(document))
         words = re.findall(split_regex, text)
         for word in words:
-            sys.stdout.write((word.lower() + '\t' + doc_id).encode('utf-8') + '\n')
+            sys.stdout.write((word.strip().lower() + '\t' + doc_id).encode('utf-8') + '\n')
 
 
 if __name__ == '__main__':

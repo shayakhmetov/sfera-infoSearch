@@ -26,7 +26,7 @@ def write_result(term, doc_ids, encode_function=simple9.encode):
 
 
 def main():
-    if len(sys.argv) < 2 or sys.argv[1] == 'vb':
+    if len(sys.argv) == 2 and sys.argv[1] == 'vb':
         encode = varbyte.encode
     else:
         encode = simple9.encode

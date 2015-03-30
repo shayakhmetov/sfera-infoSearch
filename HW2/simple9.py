@@ -228,7 +228,5 @@ def main():
     decode_file(read_filename='blob', write_filename='result')
 
 
-
-
 if __name__ == '__main__':
     main()
