@@ -1,6 +1,6 @@
 from __future__ import print_function
 __author__ = 'rim'
-import codecs
+import codecs, sys
 
 
 def format_control_code(num):
@@ -126,6 +126,9 @@ def encode(int_array):
         else:
             cur_max_length = get_length(to_next=cur_max_length)
             cur_max_n = get_number(cur_max_length)
+            if cur_max_n > number_of_current:
+                cur_max_n = 1
+                cur_max_length = get_length(cur_max_n)
             assert cur_max_n <= number_of_current
 
             if byte_string:
