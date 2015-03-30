@@ -51,7 +51,7 @@ def main():
         while line:
             line = [t.strip() for t in line.rstrip().lower().split('and')]
             try:
-                print('Запрос: ', line)
+                # print('Запрос: ', line)
                 posting_lists = []
                 for term in line:
                     if not term:
@@ -66,7 +66,7 @@ def main():
                         b64string = file_index.read(length)
                         doc_ids = set(read_nums(b64string, decode_function=decode))
 
-                        posting_lists.append((deny, doc_ids))  # 1 - NOT, 0 - otherwise
+                        posting_lists.append((deny, doc_ids))
                     else:
                         raise StandardError(str(term) + ' нигде не встречается')
 
@@ -82,9 +82,9 @@ def main():
                         if i == 0:
                             result_urls = doc_ids
                         else:
-                            result_urls = result_urls.intersection(doc_ids)
+                            result_urls = {doc_id for doc_id in result_urls if doc_id in doc_ids}
                     if len(result_urls) == 0:
-                        raise StandardError('Совпадений не найдено')
+                        raise StandardError('\tСовпадений не найдено')
                 for doc_id in result_urls:
                     print(urls[doc_id])
                 print('\tНайдено', len(result_urls), 'совпадений')
