@@ -65,18 +65,36 @@ def get_features(line, index):
     else:
         features.append(-1)
 
-    features.append(len(words[-1]))
+    features.append(len(words))
+    # features.append(len(words[-1]))
     features.append(len(next_words[0]))
     features.append(get_code_char(words[-1][-1]))
+    features.append(get_code_char(words[-1][0]))
     features.append(get_code_char(next_words[0][0]))
 
+    best_delimeters_counts = [index - i for i, c in enumerate(line[:index]) if c in best_delimeters]
+    potentional_delimeters_counts = [index - i for i, c in enumerate(line[:index]) if c in potentional_delimeters]
+
+    if potentional_delimeters_counts:
+        features.append(sum(potentional_delimeters_counts)/float(len(potentional_delimeters_counts)))
+        features.append(min(potentional_delimeters_counts))
+        features.append(max(potentional_delimeters_counts))
+    else:
+        features += [-1]*3
+    if best_delimeters_counts:
+        features.append(sum(best_delimeters_counts)/float(len(best_delimeters_counts)))
+        features.append(min(best_delimeters_counts))
+        features.append(max(best_delimeters_counts))
+    else:
+        features += [-1]*3
+
+    features.append(len(potentional_delimeters_counts))
+    features.append(len(best_delimeters_counts))
 
     return features
 
 
 def construct_examples(sentence, next_sentence):
-    sentence = sentence
-    next_sentence = next_sentence
     line = sentence + ' ' + next_sentence
     assert len(line) >= 3
     if len(sentence) > 1 and len(next_sentence) > 1:
@@ -88,8 +106,6 @@ def construct_examples(sentence, next_sentence):
             if c in potentional_delimeters:
                 features = get_features(line, i)
                 yield {'tag': 1, 'features': features}
-
-
 
 
 def construct_data_set(sentences):
@@ -116,7 +132,7 @@ def main():
     targets = np.array([0]*len(positive_set) + [1]*len(negative_set))
 
     print("Running cross validation...")
-    clf = RandomForestClassifier()
+    clf = RandomForestClassifier(n_estimators=30, max_depth=10, min_samples_split=1)
 
     predicted = cross_validation.cross_val_predict(clf, data_set, targets, cv=3)
     target_names = ['конец предложения', 'не конец предложения']
@@ -126,6 +142,7 @@ def main():
     clf.fit(data_set, targets)
 
     print("Feature importances is ", *["%.5f" % f for f in  clf.feature_importances_])
+    # print("OOB score is ", clf.oob_score_)
     print("Saving the model...")
     model_filename = 'saved/saved_model'
     joblib.dump(clf, model_filename)
