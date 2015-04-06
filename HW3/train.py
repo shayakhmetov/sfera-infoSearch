@@ -50,46 +50,41 @@ def get_code_char(char):
 
 def get_features(line, index):
     features = []
-    words = line[:index].split()
+    words = [word.split() for word in line[:index].strip().split()]
     next_words = [word.strip() for word in line[index+1:].strip().split()]
 
     features.append(get_code_char(line[index]))
     features.append(get_code_char(line[index+1]))
     features.append(get_code_char(line[index-1]))
-
-    if next_words[0][0].isupper():
-        features.append(0)
+    if index + 2 < len(line):
+        features.append(get_code_char(line[index+2]))
     else:
-        features.append(1)
-
-    if words[-1][0].isupper():
-        features.append(0)
+        features.append(-1)
+    if index - 2 >= 0:
+        features.append(get_code_char(line[index-2]))
     else:
-        features.append(1)
+        features.append(-1)
 
-    features.append(len(words))
-    features.append(len(next_words))
     features.append(len(words[-1]))
     features.append(len(next_words[0]))
+    features.append(get_code_char(words[-1][-1]))
+    features.append(get_code_char(next_words[0][0]))
+
+
     return features
 
 
 def construct_examples(sentence, next_sentence):
-    sentence = sentence.rstrip()
-    next_sentence = next_sentence.rstrip()
+    sentence = sentence
+    next_sentence = next_sentence
     line = sentence + ' ' + next_sentence
     assert len(line) >= 3
     if len(sentence) > 1 and len(next_sentence) > 1:
         features = get_features(line, len(sentence)-1)
         yield {'tag': 0, 'features': features}
 
-    # if len(sentence) >= 50:
-    #     rand_index = random.randint(1, len(sentence) - 2)
-    #     features = get_features(line, rand_index)
-    #     yield {'tag': 1, 'features': features}
-
     for i, c in enumerate(line):
-        if i != 0 and i != len(sentence)-1 and i != len(line)-1:
+        if i != len(sentence)-1 and 0 < i < len(line)-1:
             if c in potentional_delimeters:
                 features = get_features(line, i)
                 yield {'tag': 1, 'features': features}
@@ -109,12 +104,16 @@ def construct_data_set(sentences):
 def main():
     xml_filename = 'sentences.xml'
     print("Parsing opencorpora...")
-    sentences = [l.encode('utf-8') for l in list(get_sentences(xml_filename)) if l.strip() != '']
+    sentences = [l.encode('utf-8').strip() for l in get_sentences(xml_filename) if l.encode('utf-8').strip() != '']
 
     print("Constructing features...")
     data_set = construct_data_set(sentences)
-    targets = np.array([d['tag'] for d in data_set])
-    data_set = np.array([d['features'] for d in data_set])
+    positive_set = [d['features'] for d in data_set if d['tag'] == 0]
+    negative_set = [d['features'] for d in data_set if d['tag'] == 1]
+    random.shuffle(negative_set)
+    negative_set = negative_set[:len(positive_set)]
+    data_set = np.array(positive_set + negative_set)
+    targets = np.array([0]*len(positive_set) + [1]*len(negative_set))
 
     print("Running cross validation...")
     clf = RandomForestClassifier()
