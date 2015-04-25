@@ -132,7 +132,7 @@ def main():
     targets = np.array([0]*len(positive_set) + [1]*len(negative_set))
 
     print("Running cross validation...")
-    clf = RandomForestClassifier(n_estimators=30, max_depth=10, min_samples_split=1)
+    clf = RandomForestClassifier(n_estimators=50, max_depth=10, min_samples_split=1)
 
     predicted = cross_validation.cross_val_predict(clf, data_set, targets, cv=3)
     target_names = ['конец предложения', 'не конец предложения']
