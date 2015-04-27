@@ -1,2 +1,2 @@
 #!/bin/bash
-python search.py inverted_index dictionary ./povarenok/1_100/urls.txt
+python search.py inverted_index dictionary_inverted_index urls.txt stop_words.txt
