@@ -6,6 +6,7 @@ import sys
 import os
 import pickle
 
+
 def main():
     if len(sys.argv) == 3:
         filename_index = sys.argv[1]

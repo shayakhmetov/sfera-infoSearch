@@ -1,3 +1,3 @@
 #!/bin/bash
 echo "Estimating search quality..."
-python estimate_search.py inverted_index dictionary_inverted_index urls.txt marks/povarenok1000.tsv stop_words.txt
+cat marks/povarenok1000.tsv | python estimate_search.py inverted_index dictionary_inverted_index urls.txt stop_words.txt

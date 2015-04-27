@@ -25,35 +25,50 @@ def convert_to_differences(nums):
 def write_result(term, term_doc_ids, number_all_docs, docs_lengths, encode_function=simple9.encode):
     unique_doc_ids = []
     for doc_id in sorted(term_doc_ids.keys()):
-        unique_doc_ids.append((doc_id, term_doc_ids[doc_id]))
+        unique_doc_ids.append((doc_id, sorted(term_doc_ids[doc_id])))
     doc_ids = [u[0] for u in unique_doc_ids]
+
+    b64string = base64.b64encode(''.join([chr(x) for x in encode_function(convert_to_differences(doc_ids))]))
+    sys.stdout.write((term + '\t' + b64string + '\t').encode('utf-8'))
+    b64string = None
+
     tfs = [len(u[1]) for u in unique_doc_ids]
     idf = math.log(1.0*number_all_docs/len(tfs), 10)
     b = 0.75
     k1 = 2.0
-    tfidfs = [int(round(tf*idf/(tf + k1*(b + docs_lengths[doc_ids[i]]*(1.0 - b))), 5)*(10**5)) for i, tf in enumerate(tfs)]
-    tfidfs_b64 = base64.b64encode(''.join([chr(x) for x in encode_function(tfidfs)]))
-    coords_b64 = [base64.b64encode(''.join([chr(x) for x in encode_function(u[1])])) for u in unique_doc_ids]
-    coords = ','.join(coords_b64)
 
-    doc_ids = convert_to_differences(doc_ids)
-    b64string = base64.b64encode(''.join([chr(x) for x in encode_function(doc_ids)]))
-    sys.stdout.write((term + '\t' + b64string + '\t' + tfidfs_b64 + '\t' + coords + '\n').encode('utf-8'))
+    tfidfs = [int(round(tf*idf/(tf + k1*(b + docs_lengths[doc_ids[i]]*(1.0 - b))), 5)*(10**5)) for i, tf in enumerate(tfs)]
+    tfidfs = base64.b64encode(''.join([chr(x) for x in encode_function(tfidfs)]))
+    sys.stdout.write((tfidfs + '\t').encode('utf-8'))
+    tfs.clear()
+    tfidfs.clear()
+    b, k1, idf = None, None, None
+
+    coords = [base64.b64encode(''.join([chr(x) for x in encode_function(convert_to_differences(u[1]))])) for u in unique_doc_ids]
+    coords = ','.join(coords)
+    unique_doc_ids.clear()
+
+    sys.stdout.write((coords + '\n').encode('utf-8'))
 
 
 def main():
     if len(sys.argv) == 3 and sys.argv[2] == 'vb':
-        filename_direct_dictionary = sys.argv[1]
         encode = varbyte.encode
     else:
-        filename_direct_dictionary = 'dictionary_direct_index'
         encode = simple9.encode
+    if len(sys.argv) >= 2:
+        filename_direct_dictionary = sys.argv[1]
+    else:
+        filename_direct_dictionary = 'dictionary_direct_index'
     current_term = None
     with open(filename_direct_dictionary, 'r') as direct_dictionary_file:
         direct_dictionary = pickle.load(direct_dictionary_file)
 
-        docs_lengths = {doc_id: val['number_of_words'] for doc_id, val in direct_dictionary.items()}
+        docs_lengths = {}
+        for doc_id, val in direct_dictionary.items():
+            docs_lengths[doc_id] = val['number_of_words']
         number_all_docs = len(docs_lengths)
+        direct_dictionary.clear()
 
         doc_ids = {}
         for line in sys.stdin:

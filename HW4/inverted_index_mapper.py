@@ -18,7 +18,7 @@ def main():
         filename_stop_words = sys.argv[1]
     else:
         filename_stop_words = 'stop_words.txt'
-    with codecs.open(filename_stop_words, 'r') as file_stop_words:
+    with codecs.open(filename_stop_words, 'r', encoding='utf-8') as file_stop_words:
         stop_words = []
         for line in file_stop_words:
             stop_words.append(line.strip())
