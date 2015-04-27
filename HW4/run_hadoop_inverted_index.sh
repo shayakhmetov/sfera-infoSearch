@@ -9,6 +9,6 @@ hadoop jar /usr/lib/hadoop-mapreduce/hadoop-streaming.jar \
     -files ${SRC}/ \
     -mapper 'src_inverted_index/inverted_index_mapper.py src_inverted_index/stop_words.txt' \
     -reducer 'src_inverted_index/inverted_index_reducer.py src_inverted_index/dictionary_direct_index_all' \
-    -numReduceTasks 10 \
+    -numReduceTasks 30 \
     -input ${INPUT} \
     -output ${OUTPUT}

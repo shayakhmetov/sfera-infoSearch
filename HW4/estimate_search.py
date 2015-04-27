@@ -51,7 +51,7 @@ def main():
         urls = []
         for url_line in file_urls:
             doc_id, url = url_line.rstrip().split()
-            if url[-1] == '/':
+            if url[-1] == '/' and url[-4:] != '.ru/':
                 url = url[:-1]
             assert int(doc_id) == len(urls)
             urls.append(url)
@@ -104,11 +104,13 @@ def main():
 
                 result_urls = text_rank.sort_by_passage(words, result_urls, tfidf_dictionary, coords_dictionary, decode_function=decode)
                 all_found += 1
+                print(good_url)
                 for i, doc_id in enumerate(result_urls):
                     if urls[doc_id] == good_url:
                         found_assessors += 1
                         found_positions.append(i + 1)
                         break
+
             except UserWarning, e:
                 # print(e)
                 pass

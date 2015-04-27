@@ -35,7 +35,7 @@ def main():
             for word in words:
                 lower_word = word.strip().lower()
                 if lower_word not in stop_words:
-                    sys.stdout.write((doc_id + '\t' + word + '\t').encode('utf-8'))
+                    sys.stdout.write((doc_id + '\t' + lower_word + '\t').encode('utf-8'))
             sys.stdout.write('\n')
 
 
