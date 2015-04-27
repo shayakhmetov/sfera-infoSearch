@@ -10,10 +10,14 @@ run_all_local.sh - запуск всех этапов для полной лок
 
 Используя Hadoop:
 
-(hadoop) run_hadoop_inverted_index.sh - генерация "сырого" прямого индекса (raw_direct_index_all).
-(локально) run_hadoop_construct_direct_index.sh - создание прямого индекса (direct_index_all) со словарём (dictionary_direct_index_all), который необходим для следующего шага: run_hadoop_inverted_index.sh
-(hadoop) run_hadoop_inverted_index.sh - генерация "сырого" обратного индекса (raw_inverted_index_all).
-(локально) run_hadoop_construct_inverted_index.sh - создание обратного индекса (inverted_index_all) со словарём (dictionary_inverted_index_all)
+(hadoop)
+    run_hadoop_inverted_index.sh - генерация "сырого" прямого индекса (raw_direct_index_all).
+(локально)
+    run_hadoop_construct_direct_index.sh - создание прямого индекса (direct_index_all) со словарём (dictionary_direct_index_all), который необходим для следующего шага: run_hadoop_inverted_index.sh
+(hadoop)
+    run_hadoop_inverted_index.sh - генерация "сырого" обратного индекса (raw_inverted_index_all).
+(локально)
+    run_hadoop_construct_inverted_index.sh - создание обратного индекса (inverted_index_all) со словарём (dictionary_inverted_index_all)
 
 run_search.sh - ввод запросов и поиск.
 run_estimate_search.sh - оценка поиска
