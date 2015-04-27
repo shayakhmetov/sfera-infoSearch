@@ -36,7 +36,7 @@ def write_result(term, term_doc_ids, number_all_docs, docs_lengths, encode_funct
     coords_b64 = [base64.b64encode(''.join([chr(x) for x in encode_function(u[1])])) for u in unique_doc_ids]
     coords = ','.join(coords_b64)
 
-    term_doc_ids = convert_to_differences(term_doc_ids)
+    doc_ids = convert_to_differences(doc_ids)
     b64string = base64.b64encode(''.join([chr(x) for x in encode_function(doc_ids)]))
     sys.stdout.write((term + '\t' + b64string + '\t' + tfidfs_b64 + '\t' + coords + '\n').encode('utf-8'))
 

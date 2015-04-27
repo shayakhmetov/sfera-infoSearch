@@ -68,7 +68,7 @@ def main():
                     if term in dictionary:
                         offset, length = dictionary[term]['offset'], dictionary[term]['length']
                         file_index.seek(offset)
-                        b64string, tfidfs_b64, coords_b64 = file_index.read(length).split('\t')
+                        b64string, tfidfs_b64, coords_b64 = file_index.read(length).split('\t', 2)
 
                         doc_ids = list(read_nums(b64string, decode_function=decode))
                         tfidfs = [1.0*val/(10**5) for val in decode([ord(x) for x in base64.b64decode(tfidfs_b64)])]

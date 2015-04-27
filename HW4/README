@@ -1,30 +1,41 @@
 Сайт: povarenok.ru
 
+Нужно указать
+    в run_inverted_index.sh и run_direct_index.sh нужный путь к файлу docs-*.txt
+    в run_search.sh путь к файлу urls.txt (3-й аргумент для search.py)
+    в run_estimate_search.sh путь к файлу оценок ассессоров povarenok1000.tsv (4-й аргумент для estimate_search.py)
+
+
 Локальная генерация:
 
 run_all_local.sh - запуск всех этапов для полной локальной генерации индекса + оценка поиска
+
     run_direct_index.sh - генерация "сырого" прямого индекса (raw_direct_index).
+
     run_construct_direct_index.sh - создание прямого индекса (direct_index) со словарём (dictionary_direct_index), который необходим для следующего шага: run_inverted_index.sh
+
     run_inverted_index.sh - генерация "сырого" обратного индекса (raw_inverted_index)
+
     run_construct_inverted_index.sh - создание обратного индекса (inverted_index) со словарём (dictionary_inverted_index)
+
 
 Используя Hadoop:
 
 (hadoop)
     run_hadoop_inverted_index.sh - генерация "сырого" прямого индекса (raw_direct_index_all).
+
 (локально)
     run_hadoop_construct_direct_index.sh - создание прямого индекса (direct_index_all) со словарём (dictionary_direct_index_all), который необходим для следующего шага: run_hadoop_inverted_index.sh
+
 (hadoop)
     run_hadoop_inverted_index.sh - генерация "сырого" обратного индекса (raw_inverted_index_all).
+
 (локально)
     run_hadoop_construct_inverted_index.sh - создание обратного индекса (inverted_index_all) со словарём (dictionary_inverted_index_all)
+
 
 run_search.sh - ввод запросов и поиск.
 run_estimate_search.sh - оценка поиска
 
-Нужно указать
-    в run_mapper.sh нужный путь к файлу docs-*.txt
-    в run_search.sh путь к файлу urls.txt (3-й аргумент для search.py)
-    в run_estimate_search.sh путь к файлу оценок ассессоров povarenok1000.tsv (4-й аргумент для estimate_search.py)
 
 P.S. Также можно изменить названия создаваемых файлов на каждом этапе или указать режим сжатия (последний параметр "vb" - varbyte у *reducer и search, если не указывать ничего - simple9)
