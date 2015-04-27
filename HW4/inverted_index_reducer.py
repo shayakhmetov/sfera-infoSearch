@@ -40,13 +40,12 @@ def write_result(term, term_doc_ids, number_all_docs, docs_lengths, encode_funct
     tfidfs = [int(round(tf*idf/(tf + k1*(b + docs_lengths[doc_ids[i]]*(1.0 - b))), 5)*(10**5)) for i, tf in enumerate(tfs)]
     tfidfs = base64.b64encode(''.join([chr(x) for x in encode_function(tfidfs)]))
     sys.stdout.write((tfidfs + '\t').encode('utf-8'))
-    tfs.clear()
-    tfidfs.clear()
+    tfs, tfidfs = None, None
     b, k1, idf = None, None, None
 
     coords = [base64.b64encode(''.join([chr(x) for x in encode_function(convert_to_differences(u[1]))])) for u in unique_doc_ids]
     coords = ','.join(coords)
-    unique_doc_ids.clear()
+    unique_doc_ids = None
 
     sys.stdout.write((coords + '\n').encode('utf-8'))
 

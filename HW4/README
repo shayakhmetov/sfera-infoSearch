@@ -1,9 +1,9 @@
-Сайт: povarenok.ru
+Реализовано: bm25 и пассажный алгоритм (пока без настройки весов).
 
 Нужно указать
     в run_inverted_index.sh и run_direct_index.sh нужный путь к файлу docs-*.txt
-    в run_search.sh путь к файлу urls.txt (3-й аргумент для search.py)
-    в run_estimate_search.sh путь к файлу оценок ассессоров povarenok1000.tsv (4-й аргумент для estimate_search.py)
+    в run_[hadoop]search.sh и run_[hadoop]estimate_search.sh путь к файлу urls.txt (3-й аргумент)
+    в run_[hadoop]estimate_search.sh путь к файлу оценок ассессоров *1000.tsv (4-й аргумент для estimate_search.py)
 
 
 Локальная генерация:
@@ -17,6 +17,11 @@ run_all_local.sh - запуск всех этапов для полной лок
     run_inverted_index.sh - генерация "сырого" обратного индекса (raw_inverted_index)
 
     run_construct_inverted_index.sh - создание обратного индекса (inverted_index) со словарём (dictionary_inverted_index)
+
+    run_estimate_search.sh - оценка поиска
+
+    run_search.sh - ввод запросов и поиск.
+
 
 
 Используя Hadoop:
@@ -33,9 +38,14 @@ run_all_local.sh - запуск всех этапов для полной лок
 (локально)
     run_hadoop_construct_inverted_index.sh - создание обратного индекса (inverted_index_all) со словарём (dictionary_inverted_index_all)
 
+(локально)
+    run_hadoop_estimate_search.sh - оценка поиска
 
-run_search.sh - ввод запросов и поиск.
-run_estimate_search.sh - оценка поиска
+(локально)
+    run_hadoop_search.sh - ввод запросов и поиск.
 
+все локальные скрипты run_hadoop*.sh - аналоги локальных скриптов из run_all_local.sh, за исключением принимаемых файлов (добавляется _all)
 
 P.S. Также можно изменить названия создаваемых файлов на каждом этапе или указать режим сжатия (последний параметр "vb" - varbyte у *reducer и search, если не указывать ничего - simple9)
+
+P.P.S. прямой индекс - отображение doc_id -> len(words), words. Обратный индекс при построении и вычислении tf-idf использует только len(words). words пока нигде не используется.
