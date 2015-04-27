@@ -1,10 +1,25 @@
-Нужно указать
-    в run_mapper.sh нужный путь к файлу docs-000.txt (я проверял на povarenok 1/1000 и 1/100)
-    в run_additional_info.sh путь к файлу urls.txt
-    в run_search.sh путь к файлу urls.txt (3-й аргумент для search.py)
+Сайт: povarenok.ru
 
-Полная генерация всего и открытие поиска ./run_all.sh
-Только открытие поиска по уже сгенерированным индексу и словарю - ./run_search.sh
-Также остальные ./run_* можно запускать отдельно по порядку, указанному в ./run_all.sh
+Локальная генерация:
+
+run_all_local.sh - скрипт для полной локальной генерации индекса + оценка поиска
+
+
+Используя Hadoop:
+
+Необходимые файлы для запуска - mapper.py reducer.py simple9.py varbyte.py
+run_hadoop_mapreduce.sh - скрипт для запуска на Hadoop mapper.py и reducer.py для создания "сырого" обратного индекса (raw_inverted_index).
+run_all_after_hadoop.sh - аналогично run_all_local, за исключением фазы mapreduce.
+Результат - raw_inverted_index
+
+Каждый этап в run_all*.sh можно запускать отдельно по порядку, указанном в соответствующем скрипте
+
+run_search - ввод запросов и поиск.
+run_estimate_search - оценка поиска
+
+Нужно указать
+    в run_mapper.sh нужный путь к файлу docs-*.txt
+    в run_search.sh путь к файлу urls.txt (3-й аргумент для search.py)
+    в run_estimate_search.sh путь к файлу оценок ассессоров povarenok1000.tsv (4-й аргумент для estimate_search.py)
 
 P.S. Также можно изменить названия создаваемых файлов на каждом этапе или указать режим сжатия (последний параметр "vb" - varbyte у run_reducer.sh и run_search.sh, если не указывать ничего - simple9)

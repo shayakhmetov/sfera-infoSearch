@@ -1,6 +1,6 @@
 #!/bin/bash
 ./run_mapper.sh
 ./run_reducer.sh
-./run_additional_info.sh
+./run_docs_info.sh
 ./run_construct.sh
-./run_search.sh
+./run_estimate_search.sh

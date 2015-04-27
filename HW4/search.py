@@ -27,10 +27,8 @@ def read_nums(b64string, decode_function=simple9.decode):
 def main():
     if len(sys.argv) == 5 and sys.argv[4] == 'vb':
         decode = varbyte.decode
-        print('VarByte DECODING')
     else:
         decode = simple9.decode
-        print('Simple9 DECODING')
     if len(sys.argv) >= 4:
         filename_index = sys.argv[1]
         filename_dict = sys.argv[2]
@@ -50,51 +48,46 @@ def main():
         line = print('Введите поисковый запрос или CTRL+D для выхода')
         line = sys.stdin.readline()
         while line:
-            line = [t.strip() for t in line.rstrip().lower().split('and')]
+            line = [t.strip().lower() for t in line.strip().split()]
             try:
-                # print('Запрос: ', line)
                 posting_lists = []
+                tfidf_dictionary = {}
+                print(line)
                 for term in line:
                     if not term:
                         raise StandardError()
-                    deny = False    # NOT operator
-                    if re.match('not\s.*', term):
-                        term = term[4:].strip()
-                        deny = True
                     if term in dictionary:
                         offset, length = dictionary[term]['offset'], dictionary[term]['length']
                         file_index.seek(offset)
-                        b64string, tfidfs = file_index.read(length).split('\t')
+                        b64string, tfidfs_b64 = file_index.read(length).split('\t')
 
-                        doc_ids = set(read_nums(b64string, decode_function=decode))
+                        doc_ids = list(read_nums(b64string, decode_function=decode))
+                        tfidfs = [1.0*val/(10**5) for val in decode([ord(x) for x in base64.b64decode(tfidfs_b64)])]
 
-                        posting_lists.append((deny, doc_ids))
+                        for doc, tfidf in zip(doc_ids, tfidfs):
+                            tfidf_dictionary[term] = {doc: tfidf}
+
+                        posting_lists.append(doc_ids)
                     else:
                         raise StandardError(str(term) + ' нигде не встречается')
 
                 result_urls = {}
-                for i, pl in enumerate(sorted(posting_lists, key=lambda p: p[0])):
-                    doc_ids = pl[1]
-                    if pl[0]:
-                        if i == 0:
-                            result_urls = {doc_id for doc_id in range(len(urls)) if doc_id not in doc_ids}
-                        else:
-                            result_urls = {doc_id for doc_id in result_urls if doc_id not in doc_ids}
+                for i, doc_ids in enumerate(sorted(posting_lists, key=lambda p: p[0])):
+                    if i == 0:
+                        result_urls = doc_ids
                     else:
-                        if i == 0:
-                            result_urls = doc_ids
-                        else:
-                            result_urls = {doc_id for doc_id in result_urls if doc_id in doc_ids}
+                        result_urls = {doc_id for doc_id in result_urls if doc_id in doc_ids}
                     if len(result_urls) == 0:
                         raise StandardError('\tСовпадений не найдено')
-                for doc_id in result_urls:
-                    print(urls[doc_id])
+                result_urls = sorted(result_urls, key=lambda doc: -sum([tfidf_dictionary[term].get(doc, default=0.) for term in line]))
+                for i, doc_id in enumerate(result_urls):
+                    print(i, '->', urls[doc_id])
                 print('\tНайдено', len(result_urls), 'совпадений')
 
             except StandardError, e:
                 print(e)
 
-            line = print('Введите поисковый запрос или CTRL+D для выхода')
+            line = print('\nВведите поисковый запрос или CTRL+D для выхода')
             line = sys.stdin.readline()
 
 

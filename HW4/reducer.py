@@ -7,6 +7,8 @@ import base64
 import simple9
 import varbyte
 import itertools
+import os
+sys.path.append(os.path.dirname(__file__))
 
 
 def convert_to_differences(nums):
@@ -28,7 +30,7 @@ def write_result(term, doc_ids, encode_function=simple9.encode):
     b64string = base64.b64encode(''.join([chr(x) for x in encode_function(doc_ids)]))
     sys.stdout.write((term + '\t' + b64string + '\t').encode('utf-8'))
     tf_string = ','.join([str(u[1]) for u in unique_doc_ids])
-    sys.stdout.write((tf_string + '\n').encode('utf-8'))
+    sys.stdout.write((tf_string + '\n').encode())
 
 
 def main():

@@ -76,6 +76,7 @@ def give_nums(current_nums, max_length, string_code):
 
 
 def encode(int_array):
+    int_array = iter(int_array)
     current_nums, looking_nums = [], []
     number_of_current, cur_max_length, cur_max_n, new_max_length, new_max_n = 0, 0, 0, 0, 0
     looking_nums.append(next(int_array))
