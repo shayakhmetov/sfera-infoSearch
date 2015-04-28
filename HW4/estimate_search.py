@@ -104,7 +104,7 @@ def main():
 
                 result_urls = text_rank.sort_by_passage(words, result_urls, tfidf_dictionary, coords_dictionary, decode_function=decode)
                 all_found += 1
-                print(good_url)
+                # print(good_url)
                 for i, doc_id in enumerate(result_urls):
                     if urls[doc_id] == good_url:
                         found_assessors += 1
