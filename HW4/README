@@ -4,8 +4,8 @@
 
 Нужно указать
     в run_inverted_index.sh и run_direct_index.sh нужный путь к файлу docs-*.txt
-    в run_[hadoop]search.sh и run_[hadoop]estimate_search.sh путь к файлу urls.txt (3-й аргумент)
-    в run_[hadoop]estimate_search.sh путь к файлу оценок ассессоров *1000.tsv (4-й аргумент для estimate_search.py)
+    в run_[hadoop_]search.sh и run_[hadoop_]estimate_search.sh путь к файлу urls.txt (3-й аргумент)
+    в run_[hadoop_]estimate_search.sh путь к файлу оценок ассессоров *1000.tsv (4-й аргумент для estimate_search.py)
 
 
 Локальная генерация:
